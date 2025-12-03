@@ -175,7 +175,9 @@ mod tests {
                 Path::new("/bad"),
                 true
             ),
-            OsString::from("export PATH='/good/space path:/bad/foo (x86)'\nexport WSLPATH='/bad/foo (x86)'\n")
+            OsString::from(
+                "export PATH='/good/space path:/bad/foo (x86)'\nexport WSLPATH='/bad/foo (x86)'\n"
+            )
         );
     }
 }

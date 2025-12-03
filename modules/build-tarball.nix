@@ -17,7 +17,7 @@ let
     let
       # Use the nix parser conveniently built into nix
       flake = import ../flake.nix;
-      url = flake.inputs.nixpkgs.url;
+      inherit (flake.inputs.nixpkgs) url;
       version = lib.removePrefix "github:NixOS/nixpkgs/nixos-" url;
     in
     if version == "unstable"

@@ -5,7 +5,7 @@ let
     let
       # Use the nix parser conveniently built into nix
       flake = import <nixos-wsl/flake.nix>;
-      url = flake.inputs.nixpkgs.url;
+      inherit (flake.inputs.nixpkgs) url;
       version = lib.removePrefix "github:NixOS/nixpkgs/nixos-" url;
     in
     if version == "unstable"
@@ -20,7 +20,7 @@ in
 
   wsl.enable = true;
 
-  home-manager.users.nixos = { ... }: {
+  home-manager.users.nixos = _: {
     home = {
       stateVersion = ver;
       packages = [ pkgs.vim ];

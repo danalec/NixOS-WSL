@@ -118,29 +118,35 @@ in
       ];
     };
 
-    # Make sure the WSLg X11 socket is available if /tmp is mounted to something else
-    systemd.mounts = [rec {
-      description = "Mount WSLg X11 socket";
-      what = "${cfg.wslConf.automount.root}/wslg/.X11-unix/X0";
-      where = "/tmp/.X11-unix/X0";
-      type = "none";
-      options = "bind";
-      after = [ "nixos-wsl-migration-x11mount.service" ];
-      wants = after;
-      wantedBy = [ "local-fs.target" ];
-      unitConfig.ConditionPathExists = what;
-    }];
-    # Remove symbolic link for WSLg X11 socket, which was created by NixOS-WSL until 2024-02-24
-    systemd.services.nixos-wsl-migration-x11mount = {
-      description = "Remove /tmp/.X11-unix symlink if present";
-      unitConfig = {
-        ConditionPathIsSymbolicLink = "/tmp/.X11-unix";
-        DefaultDependencies = "no";
-      };
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = "${pkgs.coreutils}/bin/rm /tmp/.X11-unix";
+    # Consolidate systemd assignments to avoid repeated keys
+    systemd = {
+      mounts = [rec {
+        description = "Mount WSLg X11 socket";
+        what = "${cfg.wslConf.automount.root}/wslg/.X11-unix/X0";
+        where = "/tmp/.X11-unix/X0";
+        type = "none";
+        options = "bind";
+        after = [ "nixos-wsl-migration-x11mount.service" ];
+        wants = after;
+        wantedBy = [ "local-fs.target" ];
+        unitConfig.ConditionPathExists = what;
+      }];
+      services = {
+        nixos-wsl-migration-x11mount = {
+          description = "Remove /tmp/.X11-unix symlink if present";
+          unitConfig = {
+            ConditionPathIsSymbolicLink = "/tmp/.X11-unix";
+            DefaultDependencies = "no";
+          };
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            ExecStart = "${pkgs.coreutils}/bin/rm /tmp/.X11-unix";
+          };
+        };
+        chronyd = {
+          unitConfig = { ConditionPathExists = "/dev/ptp0"; };
+        };
       };
     };
 
@@ -231,7 +237,7 @@ in
       servers = mkDefault [ ];
     };
 
-    systemd.services.chronyd.unitConfig.ConditionPathExists = "/dev/ptp0";
+    # handled in consolidated systemd.services above
 
     warnings = flatten [
       (optional (config.services.resolved.enable && config.wsl.wslConf.network.generateResolvConf)

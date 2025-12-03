@@ -35,7 +35,7 @@ jobs:
 
       - name: Run Cargo Audit 🛡️
         run: |
-          nix develop --no-update-lock-file --command cargo audit --manifest-path utils/Cargo.toml
+          nix develop --no-update-lock-file --command bash -lc "cd utils && cargo audit"
 
   cargo-deny:
     name: Cargo Deny 🚫
@@ -52,7 +52,7 @@ jobs:
 
       - name: Run Cargo Deny 🛡️
         run: |
-          nix develop --no-update-lock-file --command cargo deny check --manifest-path utils/Cargo.toml
+          nix develop --no-update-lock-file --command bash -lc "cd utils && cargo deny check"
 
   deadnix:
     name: Deadnix 💀

@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 
 pkgs.stdenv.mkDerivation {
   name = "cargo-audit-check";

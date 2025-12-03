@@ -7,7 +7,7 @@ let
 
   wrapShell = shellPath:
     pkgs.stdenvNoCC.mkDerivation {
-      name = "wrapped-${last (splitString "/" (shellPath))}";
+      name = "wrapped-${last (splitString "/" shellPath)}";
       buildCommand = ''
         mkdir -p $out
         cp ${config.system.build.nativeUtils}/bin/shell-wrapper $out/wrapper
@@ -19,7 +19,7 @@ let
     inherit lib utils pkgs;
     config = recursiveUpdate config {
       users.users = mapAttrs
-        (n: v: v // {
+        (_: v: v // {
           shell = (wrapShell (utils.toShellPath v.shell)).outPath + "/wrapper";
         })
         config.users.users;
@@ -35,7 +35,7 @@ in
     '';
   };
 
-  config = mkIf (cfg.enable) {
+  config = mkIf cfg.enable {
     system.activationScripts.users = users-groups-module.config.system.activationScripts.users;
 
     wsl.binShExe = mkIf config.wsl.wrapBinSh ((wrapShell "${config.wsl.binShPkg}/bin/sh").outPath + "/wrapper");

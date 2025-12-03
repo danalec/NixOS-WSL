@@ -6,7 +6,7 @@
 , ...
 }:
 let
-  configModule = { config, options, ... }: {
+  configModule = { options, ... }: {
     fileSystems."/" = {
       device = "/dev/sda1";
       fsType = "ext4";
