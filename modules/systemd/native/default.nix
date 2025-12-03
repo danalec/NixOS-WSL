@@ -26,6 +26,7 @@ with lib; {
         };
         extraBin = [
           { src = "${pkgs.shadow}/bin/login"; }
+          { src = "${config.system.build.nativeUtils}/bin/split-path"; }
         ];
       };
 
@@ -58,8 +59,12 @@ with lib; {
       };
 
       environment = {
-        # preserve $PATH from parent
-        variables.PATH = [ "$PATH" ];
+        # preserve $PATH from parent and provide required runtime wrappers
+        variables = {
+          PATH = [ "$PATH" ];
+          NIXOS_WSL_SH = "${pkgs.bash}/bin/sh";
+          NIXOS_WSL_ENV = "${pkgs.coreutils}/bin/env";
+        };
         extraInit = ''
           eval $(${config.system.build.nativeUtils}/bin/split-path --automount-root="${cfg.wslConf.automount.root}" ${lib.optionalString cfg.interop.includePath "--include-interop"})
         '';

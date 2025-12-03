@@ -10,8 +10,16 @@ let
       name = "wrapped-${last (splitString "/" shellPath)}";
       buildCommand = ''
         mkdir -p $out
-        cp ${config.system.build.nativeUtils}/bin/shell-wrapper $out/wrapper
+        cp ${config.system.build.nativeUtils}/bin/shell-wrapper $out/shell-wrapper
         ln -s ${shellPath} $out/shell
+
+        cat > $out/wrapper <<'EOF'
+#!${pkgs.bash}/bin/sh
+export NIXOS_WSL_SH="${pkgs.bash}/bin/sh"
+export NIXOS_WSL_ENV="${pkgs.coreutils}/bin/env"
+exec "$(dirname "$0")/shell-wrapper" "$@"
+EOF
+        chmod +x $out/wrapper
       '';
     };
 

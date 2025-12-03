@@ -204,11 +204,27 @@ in
     # require people to use lib.mkForce to make it harder to brick their installation
     wsl = {
       populateBin = mkIf config.services.envfs.enable false;
-      extraBin = [
+      extraBin = let
+        bashWrapped = pkgs.stdenvNoCC.mkDerivation {
+          name = "wrapped-bash";
+          buildCommand = ''
+            mkdir -p $out
+            cp ${config.system.build.nativeUtils}/bin/shell-wrapper $out/shell-wrapper
+            ln -s ${pkgs.bashInteractive}/bin/bash $out/shell
+            cat > $out/wrapper <<'EOF'
+#!${pkgs.bash}/bin/sh
+export NIXOS_WSL_SH="${pkgs.bash}/bin/sh"
+export NIXOS_WSL_ENV="${pkgs.coreutils}/bin/env"
+exec "$(dirname "$0")/shell-wrapper" "$@"
+EOF
+            chmod +x $out/wrapper
+          '';
+        };
+      in [
         { src = "/init"; name = "wslpath"; }
         { src = "${cfg.binShExe}"; name = "sh"; }
         { src = "${pkgs.util-linux}/bin/mount"; }
-        { src = "${pkgs.bashInteractive}/bin/bash"; }
+        { src = "${bashWrapped}/wrapper"; name = "bash"; }
       ];
     };
 

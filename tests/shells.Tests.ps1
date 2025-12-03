@@ -55,10 +55,10 @@ Describe "Shells" {
     Add-ShellTest "fish" "fish" "echo `$SHELL"
   }
   It "should be possible to use PowerShell" {
-    Add-ShellTest "powershell" "pwsh" "Write-Output `$env:SHELL"
+    Add-ShellTest "powershell" "pwsh" "echo `$SHELL"
   }
   It "should be possible to use nushell" {
-    Add-ShellTest "nushell" "nu" "echo `$env.SHELL"
+    Add-ShellTest "nushell" "nu" "echo `$SHELL"
   }
   It "should be possible to use xonsh" {
     Add-ShellTest "xonsh" "xonsh" "echo `$SHELL"

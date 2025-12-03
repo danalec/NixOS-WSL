@@ -44,7 +44,9 @@ class Distro {
   [Array]Launch([string]$command) {
     Write-Host "> $command"
     $result = @()
-    Invoke-Expression "wsl.exe -d $($this.id) --% $command" | Tee-Object -Variable result | Write-Host
+    $escaped = $command -replace "'", "'\"'\"'"
+    & wsl.exe -d $($this.id) -- sh -lc $("'$escaped'") | Tee-Object -Variable result | Write-Host
+    $global:LASTEXITCODE = $LASTEXITCODE
     return $result | Remove-Escapes
   }
 

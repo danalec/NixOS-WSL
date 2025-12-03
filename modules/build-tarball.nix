@@ -13,6 +13,12 @@ let
     }
   );
 
+  wsl-conf = pkgs.writeText "wsl.conf" (
+    generators.toINI { } (
+      lib.filterAttrsRecursive (_: v: v != "") config.wsl.wslConf
+    )
+  );
+
   nixosWslBranch =
     let
       # Use the nix parser conveniently built into nix
@@ -161,6 +167,9 @@ in
         echo "[NixOS-WSL] Adding wsl-distribution.conf"
         install -Dm644 ${wsl-distribution-conf} "$root/etc/wsl-distribution.conf"
         install -Dm644 ${icon} "$root${iconPath}"
+
+        echo "[NixOS-WSL] Adding wsl.conf"
+        install -Dm644 ${wsl-conf} "$root/etc/wsl.conf"
 
         echo "[NixOS-WSL] Adding default config..."
         ${if cfg.configPath == null then ''

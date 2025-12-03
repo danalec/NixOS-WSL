@@ -40,7 +40,7 @@ Describe "WSLg Integration" {
   }
 
   It "should have correct DISPLAY environment handling" {
-    $result = $distro.Launch("echo \$DISPLAY")
+    $result = $distro.Launch('echo $DISPLAY')
     $LASTEXITCODE | Should -Be 0
     # DISPLAY should be set when WSLg is available
     $display = $result | Select-Object -Last 1

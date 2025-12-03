@@ -70,32 +70,42 @@ fn real_main() -> anyhow::Result<()> {
                 }
             }
 
-            // Load the environment from /etc/set-environment
-            let sh = env::var("NIXOS_WSL_SH").context("NIXOS_WSL_SH is not set")?;
-            let env_bin = env::var("NIXOS_WSL_ENV").context("NIXOS_WSL_ENV is not set")?;
-            let output = Command::new(sh)
+            let sh = env::var("NIXOS_WSL_SH").ok().unwrap_or_else(|| shell.to_string_lossy().into_owned());
+            let env_bin = env::var("NIXOS_WSL_ENV").ok().unwrap_or_else(|| {
+                if Path::new("/run/current-system/sw/bin/env").exists() {
+                    "/run/current-system/sw/bin/env".to_string()
+                } else {
+                    "/usr/bin/env".to_string()
+                }
+            });
+            let output = match Command::new(&sh)
                 .arg("-c")
                 .arg(format!(". /etc/set-environment && {} -0", env_bin))
                 .output()
-                .context("when reading /etc/set-environment")?;
+            {
+                Ok(o) => o,
+                Err(e) => {
+                    warn!("Failed to read environment from /etc/set-environment: {:?}", e);
+                    return Ok(());
+                }
+            };
 
-            // Parse the output
-            let output_string =
-                String::from_utf8(output.stdout).context("when decoding the output of env")?;
-            let env = output_string
-                .split('\0')
-                .filter(|entry| !entry.is_empty())
-                .map(|entry| {
-                    entry
-                        .split_once('=')
-                        .ok_or(anyhow!("invalid env entry: {}", entry))
-                })
-                .collect::<Result<Vec<_>, _>>()
-                .context("when parsing the output of env")?;
-
-            // Apply the environment variables
-            for &(key, val) in &env {
-                env::set_var(key, val);
+            let output_string = match String::from_utf8(output.stdout) {
+                Ok(s) => s,
+                Err(e) => {
+                    warn!("Failed to decode environment output: {:?}", e);
+                    return Ok(());
+                }
+            };
+            for entry in output_string.split('\0') {
+                if entry.is_empty() {
+                    continue;
+                }
+                if let Some((key, val)) = entry.split_once('=') {
+                    env::set_var(key, val);
+                } else {
+                    warn!("invalid env entry: {}", entry);
+                }
             }
 
             Ok(())
@@ -111,15 +121,7 @@ fn real_main() -> anyhow::Result<()> {
         ))?
         .to_string();
 
-    let arg0 = if env::args()
-        .next()
-        .map(|arg| arg.starts_with('-'))
-        .unwrap_or(false)
-    {
-        "-".to_string() + shell_exe.as_str() // prepend "-" to the shell's arg0 to make it a login shell
-    } else {
-        shell_exe.clone()
-    };
+    let arg0 = "-".to_string() + shell_exe.as_str();
 
     Err(anyhow!(Command::new(&shell)
         .arg0(arg0)

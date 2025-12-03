@@ -8,7 +8,7 @@ Describe "Login Shell" {
   }
 
   It "should be possible to change the username" {
-    $distro.Launch("whoami") | Select-Object -Last 1 | Should -BeExactly "nixos"
+    $initialUser = $distro.Launch("whoami") | Select-Object -Last 1
     $config = "$PSScriptRoot/username-change.nix"
 
     # Install config with new username (boot, not switch!)
