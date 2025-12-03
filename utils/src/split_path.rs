@@ -139,4 +139,28 @@ mod tests {
             )
         );
     }
+
+    #[test]
+    fn empty_segments_and_duplicates() {
+        assert_eq!(
+            do_split_paths(
+                &OsString::from("/good/foo::/bad/foo:/good/bar:"),
+                Path::new("/bad"),
+                false
+            ),
+            OsString::from("export PATH='/good/foo:/good/bar'\nexport WSLPATH='/bad/foo'\n")
+        );
+    }
+
+    #[test]
+    fn unusual_characters() {
+        assert_eq!(
+            do_split_paths(
+                &OsString::from("/good/space path:/bad/foo (x86)"),
+                Path::new("/bad"),
+                true
+            ),
+            OsString::from("export PATH='/good/space path:/bad/foo (x86)'\nexport WSLPATH='/bad/foo (x86)'\n")
+        );
+    }
 }
