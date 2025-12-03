@@ -25,7 +25,9 @@ fn real_main() -> anyhow::Result<()> {
         let inotify = Inotify::init(InitFlags::empty()).context("When initializing inotify")?;
 
         // Watch changes in /run to re-check if the activation script has finished
-        let _wd = inotify.add_watch("/run", AddWatchFlags::IN_CREATE).unwrap();
+        let _wd = inotify
+            .add_watch("/run", AddWatchFlags::IN_CREATE)
+            .context("When adding inotify watch on /run")?;
 
         let mut warning = false;
 
@@ -85,7 +87,7 @@ fn real_main() -> anyhow::Result<()> {
                 .filter(|entry| !entry.is_empty())
                 .map(|entry| {
                     entry
-                        .split_once("=")
+                        .split_once('=')
                         .ok_or(anyhow!("invalid env entry: {}", entry))
                 })
                 .collect::<Result<Vec<_>, _>>()

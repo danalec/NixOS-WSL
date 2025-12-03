@@ -67,7 +67,7 @@ fn do_split_paths(path: &OsStr, automount_root: &Path, include_interop: bool) ->
     }
 
     if include_interop {
-        native.extend(interop.clone());
+        native.extend(interop.iter().cloned());
     };
 
     let mut result = OsString::new();
