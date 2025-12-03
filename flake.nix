@@ -99,7 +99,7 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           # Rust toolchain aligned with NixOS stable (1.75+). See utils/Cargo.toml rust-version.
-          RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+          RUST_SRC_PATH = "${pkgs.rustPackages.stable.rustPlatform.rustLibSrc}";
 
           nativeBuildInputs = with pkgs; [
             cargo
