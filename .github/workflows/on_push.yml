@@ -38,10 +38,16 @@ jobs:
   build:
     name: Build 🛠️
     uses: ./.github/workflows/run_build.yml
+    with:
+      include_unstable: true
 
   checks:
     name: Checks 📋
     uses: ./.github/workflows/run_checks.yml
+
+  enhanced_checks:
+    name: Enhanced Checks 🔍
+    uses: ./.github/workflows/run_enhanced_checks.yml
 
   tests:
     name: Tests 🧪
@@ -67,6 +73,7 @@ jobs:
       - start
       - build
       - checks
+      - enhanced_checks
       - tests
       - validate
       - docs
@@ -80,6 +87,7 @@ jobs:
           message: |
             CI has finished:
             - 📋 Checks: ${{ needs.checks.result && '✅' || '❌' }}
+            - 🔍 Enhanced Checks: ${{ needs.enhanced_checks.result && '✅' || '❌' }}
             - 🛠️ Build: ${{ needs.build.result && '✅' || '❌' }}
             - 🧪 Tests: ${{ needs.tests.result && '✅' || '❌' }}
             - 🩺 Validate: ${{ needs.validate.result && '✅' || '❌' }}
@@ -92,6 +100,7 @@ jobs:
         run: |
           $checks = @{
             "Checks" = "${{ needs.checks.result }}"
+            "Enhanced Checks" = "${{ needs.enhanced_checks.result }}"
             "Build" = "${{ needs.build.result }}"
             "Tests" = "${{ needs.tests.result }}"
             "Validate" = "${{ needs.validate.result }}"

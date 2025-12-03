@@ -1,7 +1,13 @@
 name: Build Tarball
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      include_unstable:
+        description: 'Run an additional build against nixos-unstable'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   tar:
@@ -34,3 +40,37 @@ jobs:
         with:
           name: tarball
           path: nixos.wsl
+
+  tar-unstable:
+    name: Tarball (unstable) 🛠️
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    if: ${{ inputs.include_unstable }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix ❄️
+        uses: ./.github/actions/install-nix
+
+      - name: Set Version 🏷️
+        uses: ./.github/actions/version
+        id: version
+
+      - name: Summary Headline 📝
+        run: echo '## NixOS-WSL (unstable) ${{ steps.version.outputs.version }}' >> $GITHUB_STEP_SUMMARY
+
+      - name: Build Tarball 🛠️ (unstable)
+        uses: ./.github/actions/build-wsl-tarball
+        with:
+          config: default
+          filename: nixos-unstable.wsl
+          nix_flags: "--override-input nixpkgs github:NixOS/nixpkgs/nixos-unstable"
+
+      - name: Upload Tarball 📤 (unstable)
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: tarball-unstable
+          path: nixos-unstable.wsl
