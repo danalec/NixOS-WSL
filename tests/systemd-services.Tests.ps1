@@ -23,6 +23,9 @@ Describe "Systemd Services" {
     $output = $distro.Launch("sudo systemd-analyze verify multi-user.target --no-pager 2>&1") | Remove-Escapes
     $LASTEXITCODE | Should -Be 0
     $text = ($output -join "`n")
+    $dir = Join-Path $PWD "artifacts"
+    if (-not (Test-Path $dir)) { New-Item -ItemType Directory $dir | Out-Null }
+    Set-Content -Path (Join-Path $dir "systemd-verify.txt") -Value $text
     $text | Should -NotMatch '(?i)\berror\b'
     $text | Should -NotMatch '(?i)\bfail(?:ed)?\b'
   }

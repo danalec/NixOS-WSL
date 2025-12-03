@@ -25,11 +25,14 @@ jobs:
       - name: Install Nix ❄️
         uses: ./.github/actions/install-nix
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Build documentation 🛠️
-        id: build
-        uses: ./.github/actions/build-nix-expression
-        with:
-          expression: ".#docs"
+      id: build
+      uses: ./.github/actions/build-nix-expression
+      with:
+        expression: ".#docs"
 
       - name: Patch 404.html 🩹
         run: |

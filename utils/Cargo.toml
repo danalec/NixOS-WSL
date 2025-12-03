@@ -2,21 +2,15 @@
 name = "nixos-wsl-utils"
 version = "0.1.0"
 edition = "2021"
-# Updated to current NixOS stable Rust version
 rust-version = "1.75.0"
 
 [dependencies]
-anyhow = { version = "1.0.100", features = ["backtrace"] }
-nix = { version = "0.30.1", features = ["mount", "process", "user", "inotify"] }
-log = "0.4.28"
+anyhow = { version = "1.0.86", features = ["backtrace"] }
+nix = { version = "0.29.0", features = ["mount", "process", "user", "inotify"] }
+log = "0.4.22"
 kernlog = "0.3.1"
 systemd-journal-logger = "2.2.2"
-
-# Relaxed version caps for Rust 1.75+
-clap = { version = "4.5.53", features = ["derive"] }
-clap_lex = "0.7.6"
-anstyle = "1.0.13"
-anstyle-parse = "0.2.7"
+clap = { version = "4.5.18", features = ["derive"] }
 
 [[bin]]
 name = "systemd-shim"
