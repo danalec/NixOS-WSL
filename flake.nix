@@ -2,7 +2,8 @@
   description = "NixOS WSL";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # Pin to NixOS stable for reproducibility. Updates via Renovate PRs.
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
 
     flake-compat = {
       url = "github:edolstra/flake-compat";
@@ -81,6 +82,11 @@
           side-effects = pkgs.callPackage ./checks/side-effects.nix args;
           username = pkgs.callPackage ./checks/username.nix args;
           test-native-utils = self.packages.${pkgs.stdenv.hostPlatform.system}.utils;
+          clippy = pkgs.callPackage ./checks/clippy.nix args;
+          deadnix = pkgs.callPackage ./checks/deadnix.nix args;
+          statix = pkgs.callPackage ./checks/statix.nix args;
+          cargo-audit = pkgs.callPackage ./checks/cargo-audit.nix args;
+          cargo-deny = pkgs.callPackage ./checks/cargo-deny.nix args;
         }
       );
 
@@ -92,6 +98,7 @@
 
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
+          # Rust toolchain aligned with NixOS stable (1.75+). See utils/Cargo.toml rust-version.
           RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
 
           nativeBuildInputs = with pkgs; [
@@ -103,6 +110,8 @@
             rustc
             rustfmt
             shfmt
+            deadnix
+            statix
           ];
         };
       });
