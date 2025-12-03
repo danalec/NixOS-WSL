@@ -128,6 +128,7 @@ in
       after = [ "nixos-wsl-migration-x11mount.service" ];
       wants = after;
       wantedBy = [ "local-fs.target" ];
+      unitConfig.ConditionPathExists = what;
     }];
     # Remove symbolic link for WSLg X11 socket, which was created by NixOS-WSL until 2024-02-24
     systemd.services.nixos-wsl-migration-x11mount = {
@@ -229,6 +230,8 @@ in
       '';
       servers = mkDefault [ ];
     };
+
+    systemd.services.chronyd.unitConfig.ConditionPathExists = "/dev/ptp0";
 
     warnings = flatten [
       (optional (config.services.resolved.enable && config.wsl.wslConf.network.generateResolvConf)

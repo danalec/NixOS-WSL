@@ -113,6 +113,8 @@
             shfmt
             deadnix
             statix
+            cargo-audit
+            cargo-deny
           ];
         };
       });

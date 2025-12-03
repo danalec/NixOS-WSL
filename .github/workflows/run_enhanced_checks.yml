@@ -34,7 +34,6 @@ jobs:
 
       - name: Run Cargo Audit 🛡️
         run: |
-          nix develop --command cargo install cargo-audit
           nix develop --command cargo audit --manifest-path utils/Cargo.toml
 
   cargo-deny:
@@ -51,7 +50,6 @@ jobs:
 
       - name: Run Cargo Deny 🛡️
         run: |
-          nix develop --command cargo install cargo-deny
           nix develop --command cargo deny check --manifest-path utils/Cargo.toml
 
   deadnix:
@@ -68,7 +66,7 @@ jobs:
 
       - name: Run Deadnix 🔍
         run: |
-          nix develop --command deadnix --fail . || true
+          nix develop --command deadnix --fail .
 
   statix:
     name: Statix 📊
@@ -84,4 +82,4 @@ jobs:
 
       - name: Run Statix 🎯
         run: |
-          nix develop --command statix check . || true
+          nix develop --command statix check .

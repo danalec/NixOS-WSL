@@ -53,13 +53,23 @@ class Distro {
   }
 
   [string]FindTarball() {
-    # Check if a fresh tarball exists in result, otherwise try one in the current directory
-    $tarball = "./nixos.wsl"
-    if (!(Test-Path $tarball)) {
-      throw "Could not find the tarball! Run nix build first, or place one in the current directory."
+    $candidates = @(
+      "./nixos.wsl",
+      "./tarball/nixos.wsl",
+      "./artifact/nixos.wsl"
+    )
+    foreach ($path in $candidates) {
+      if (Test-Path $path) {
+        Write-Host "Using tarball: $path"
+        return $path
+      }
     }
-    Write-Host "Using tarball: $tarball"
-    return $tarball
+    $found = Get-ChildItem -Path . -Filter *.wsl -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($found) {
+      Write-Host "Using tarball: $($found.FullName)"
+      return $found.FullName
+    }
+    throw "Could not find the tarball! Ensure the build job uploaded it and the tests job downloaded it to the workspace."
   }
 
   [void]InstallConfig([string]$path, [string]$operation) {
