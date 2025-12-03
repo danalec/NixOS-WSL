@@ -82,7 +82,6 @@
           side-effects = pkgs.callPackage ./checks/side-effects.nix args;
           username = pkgs.callPackage ./checks/username.nix args;
           test-native-utils = self.packages.${pkgs.stdenv.hostPlatform.system}.utils;
-          clippy = pkgs.callPackage ./checks/clippy.nix args;
           # security/style checks are covered in Enhanced Checks and can be non-blocking there
         }
       );
