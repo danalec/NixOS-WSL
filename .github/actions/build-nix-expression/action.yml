@@ -23,7 +23,9 @@ runs:
       shell: bash
       run: |
         JSON=$(mktemp)
-        (nix build -L ${{ inputs.flags }} ${{ inputs.expression }} --no-link --json >$JSON) |& sed -uE 's/^(trace: +)?warning:(\s+|$)/::warning::/;s/^(trace: +)?error:(\s+|$)/::error::/;s/^trace:(\s+|$)/::notice::trace: /'
+        (nix build -L --impure --no-update-lock-file \
+          --option download-buffer-size 104857600 \
+          ${{ inputs.flags }} ${{ inputs.expression }} --no-link --json >$JSON) |& sed -uE 's/^(trace: +)?warning:(\s+|$)/::warning::/;s/^(trace: +)?error:(\s+|$)/::error::/;s/^trace:(\s+|$)/::notice::trace: /'
         DRV=$(jq -r .[0].outputs.out <$JSON)
         echo "derivation=$DRV" >> $GITHUB_OUTPUT
         echo "- Built \`$DRV\`" >> $GITHUB_STEP_SUMMARY

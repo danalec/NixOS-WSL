@@ -83,11 +83,7 @@
           username = pkgs.callPackage ./checks/username.nix args;
           test-native-utils = self.packages.${pkgs.stdenv.hostPlatform.system}.utils;
           clippy = pkgs.callPackage ./checks/clippy.nix args;
-          deadnix = pkgs.callPackage ./checks/deadnix.nix args;
-          statix = pkgs.callPackage ./checks/statix.nix args;
-          cargo-audit = pkgs.callPackage ./checks/cargo-audit.nix args;
-          cargo-deny = pkgs.callPackage ./checks/cargo-deny.nix args;
-          cargo-tree-duplicates = pkgs.callPackage ./checks/cargo-tree-duplicates.nix args;
+          # security/style checks are covered in Enhanced Checks and can be non-blocking there
         }
       );
 

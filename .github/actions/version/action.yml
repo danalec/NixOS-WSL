@@ -25,8 +25,7 @@ runs:
         "version=$version" | Tee-Object -FilePath $env:GITHUB_OUTPUT -Append
         "is_numeric=$is_numeric" | Tee-Object -FilePath $env:GITHUB_OUTPUT -Append
 
-    - name: Set Version 🏷️
-      shell: pwsh
+    - name: Set Version (Summary only) 🏷️
+      shell: bash
       run: |
-        Write-Output '${{ steps.version.outputs.version }}' | Tee-Object -FilePath ./VERSION
-        Write-Output "$(git rev-parse HEAD)" | Tee-Object -FilePath ./VERSION -Append
+        echo "Version: ${{ steps.version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"

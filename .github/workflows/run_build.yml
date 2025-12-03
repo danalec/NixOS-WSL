@@ -34,6 +34,7 @@ jobs:
         with:
           config: default
           filename: nixos.wsl
+          nix_flags: "--no-update-lock-file --option download-buffer-size 104857600"
 
       - name: Upload Tarball 📤
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
@@ -67,7 +68,7 @@ jobs:
         with:
           config: default
           filename: nixos-unstable.wsl
-          nix_flags: "--override-input nixpkgs github:NixOS/nixpkgs/nixos-unstable"
+          nix_flags: "--no-update-lock-file --option download-buffer-size 104857600 --override-input nixpkgs github:NixOS/nixpkgs/nixos-unstable"
 
       - name: Upload Tarball 📤 (unstable)
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
