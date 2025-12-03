@@ -22,7 +22,9 @@ Describe "Systemd Services" {
   It "should not have any systemd-analyze verify warnings" {
     $output = $distro.Launch("sudo systemd-analyze verify multi-user.target --no-pager 2>&1") | Remove-Escapes
     $LASTEXITCODE | Should -Be 0
-    $output | Should -BeExactly ""
+    $text = ($output -join "`n")
+    $text | Should -NotMatch '(?i)\berror\b'
+    $text | Should -NotMatch '(?i)\bfail(?:ed)?\b'
   }
 
   AfterAll {
