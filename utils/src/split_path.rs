@@ -55,20 +55,35 @@ fn build_export(var: &str, paths: &[PathBuf]) -> OsString {
 }
 
 fn do_split_paths(path: &OsStr, automount_root: &Path, include_interop: bool) -> OsString {
-    let mut native = vec![];
-    let mut interop = vec![];
+    use std::collections::HashSet;
+
+    let mut native = Vec::new();
+    let mut interop = Vec::new();
+    let mut native_seen: HashSet<OsString> = HashSet::new();
+    let mut interop_seen: HashSet<OsString> = HashSet::new();
 
     for part in env::split_paths(&path) {
+        let os = part.as_os_str();
+        if os.is_empty() {
+            continue;
+        }
         if part.starts_with(automount_root) {
-            interop.push(part);
-        } else {
+            if interop_seen.insert(os.to_owned()) {
+                interop.push(part);
+            }
+        } else if native_seen.insert(os.to_owned()) {
             native.push(part);
         }
     }
 
     if include_interop {
-        native.extend(interop.iter().cloned());
-    };
+        for p in &interop {
+            let os = p.as_os_str();
+            if native_seen.insert(os.to_owned()) {
+                native.push(p.clone());
+            }
+        }
+    }
 
     let mut result = OsString::new();
     result.push(build_export("PATH", &native));

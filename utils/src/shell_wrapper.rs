@@ -71,11 +71,11 @@ fn real_main() -> anyhow::Result<()> {
             }
 
             // Load the environment from /etc/set-environment
-            let output = Command::new(env!("NIXOS_WSL_SH"))
-                .args(&[
-                    "-c",
-                    &format!(". /etc/set-environment && {} -0", env!("NIXOS_WSL_ENV")),
-                ])
+            let sh = env::var("NIXOS_WSL_SH").context("NIXOS_WSL_SH is not set")?;
+            let env_bin = env::var("NIXOS_WSL_ENV").context("NIXOS_WSL_ENV is not set")?;
+            let output = Command::new(sh)
+                .arg("-c")
+                .arg(format!(". /etc/set-environment && {} -0", env_bin))
                 .output()
                 .context("when reading /etc/set-environment")?;
 

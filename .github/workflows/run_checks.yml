@@ -43,4 +43,4 @@ jobs:
 
       - name: Run Check 📋
         run: |
-          nix build -L --impure --expr "with builtins; (getFlake (toString ./.)).checks.\${currentSystem}.${{ matrix.check }}"
+          nix build -L --impure --no-update-lock-file --expr "with builtins; (getFlake (toString ./.)).checks.\${currentSystem}.${{ matrix.check }}"

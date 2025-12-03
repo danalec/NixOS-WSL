@@ -18,7 +18,7 @@ jobs:
 
       - name: Run Clippy 📋
         run: |
-          nix develop --command cargo clippy --manifest-path utils/Cargo.toml -- -D warnings
+          nix develop --no-update-lock-file --command cargo clippy --manifest-path utils/Cargo.toml -- -D warnings
 
   cargo-audit:
     name: Cargo Audit 🔍
@@ -34,7 +34,7 @@ jobs:
 
       - name: Run Cargo Audit 🛡️
         run: |
-          nix develop --command cargo audit --manifest-path utils/Cargo.toml
+          nix develop --no-update-lock-file --command cargo audit --manifest-path utils/Cargo.toml
 
   cargo-deny:
     name: Cargo Deny 🚫
@@ -50,7 +50,7 @@ jobs:
 
       - name: Run Cargo Deny 🛡️
         run: |
-          nix develop --command cargo deny check --manifest-path utils/Cargo.toml
+          nix develop --no-update-lock-file --command cargo deny check --manifest-path utils/Cargo.toml
 
   deadnix:
     name: Deadnix 💀
@@ -66,7 +66,7 @@ jobs:
 
       - name: Run Deadnix 🔍
         run: |
-          nix develop --command deadnix --fail .
+          nix develop --no-update-lock-file --command deadnix --fail .
 
   statix:
     name: Statix 📊
@@ -82,4 +82,4 @@ jobs:
 
       - name: Run Statix 🎯
         run: |
-          nix develop --command statix check .
+          nix develop --no-update-lock-file --command statix check .
