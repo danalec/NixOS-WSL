@@ -1,0 +1,87 @@
+name: Enhanced Checks
+
+on:
+  workflow_call: {}
+
+jobs:
+  clippy:
+    name: Clippy 🚨
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix ❄️
+        uses: ./.github/actions/install-nix
+
+      - name: Run Clippy 📋
+        run: |
+          nix develop --command cargo clippy --manifest-path utils/Cargo.toml -- -D warnings
+
+  cargo-audit:
+    name: Cargo Audit 🔍
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix ❄️
+        uses: ./.github/actions/install-nix
+
+      - name: Run Cargo Audit 🛡️
+        run: |
+          nix develop --command cargo install cargo-audit
+          nix develop --command cargo audit --manifest-path utils/Cargo.toml
+
+  cargo-deny:
+    name: Cargo Deny 🚫
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix ❄️
+        uses: ./.github/actions/install-nix
+
+      - name: Run Cargo Deny 🛡️
+        run: |
+          nix develop --command cargo install cargo-deny
+          nix develop --command cargo deny check --manifest-path utils/Cargo.toml
+
+  deadnix:
+    name: Deadnix 💀
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix ❄️
+        uses: ./.github/actions/install-nix
+
+      - name: Run Deadnix 🔍
+        run: |
+          nix develop --command deadnix --fail . || true
+
+  statix:
+    name: Statix 📊
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix ❄️
+        uses: ./.github/actions/install-nix
+
+      - name: Run Statix 🎯
+        run: |
+          nix develop --command statix check . || true

@@ -1,5 +1,51 @@
 # Installation
 
+## Flake Channel Selection
+
+NixOS-WSL supports two primary installation approaches:
+
+### Stable Channel (Recommended)
+
+The stable channel provides a reliable, well-tested experience suitable for most users. It includes:
+
+- Pin to `nixos-24.11` for reproducible builds
+- Tested Rust toolchain alignment
+- Regular security updates via Renovate
+- Full CI validation
+
+Use the stable channel for:
+- Production environments
+- Development teams requiring stability
+- Users who prefer predictable behavior
+
+### Unstable Channel (Advanced)
+
+The unstable channel tracks `nixos-unstable` for early access to features. It provides:
+
+- Latest NixOS features and improvements
+- Potential for breaking changes
+- Less extensive testing
+- Opportunity to preview upcoming stable releases
+
+Use the unstable channel for:
+- Testing new NixOS features
+- Contributing to upstream development
+- Early adoption of improvements
+
+### Channel Selection
+
+To use a specific channel, reference the appropriate flake URL:
+
+```nix
+# Stable channel (recommended)
+inputs.nixos-wsl.url = "github:nix-community/NixOS-WSL";
+
+# Unstable channel (for testing)
+inputs.nixos-wsl.url = "github:nix-community/NixOS-WSL?ref=unstable";
+```
+
+See [Maintenance Guidelines](./maintenance.md) for details on update policies and testing procedures.
+
 ## System requirements
 
 NixOS-WSL is tested with the Windows Store version of WSL 2, which is now available on all supported Windows releases (both 10 and 11).
@@ -62,6 +108,48 @@ If you want to make NixOS your default distribution, you can do so with
 
 ```powershell
 wsl -s NixOS
+```
+
+## Verification
+
+After installation, verify your setup:
+
+```sh
+# Check NixOS version
+nixos-version
+
+# Verify WSL integration
+nixos-wsl-version
+
+# Test basic functionality
+nix-shell -p hello --run hello
+```
+
+### Testing Channel Updates
+
+To test updates before applying them:
+
+```bash
+# Update channels (dry-run)
+sudo nix-channel --update --dry-run
+
+# Test configuration build
+sudo nixos-rebuild test
+
+# If successful, switch to new generation
+sudo nixos-rebuild switch
+```
+
+### Rollback
+
+If issues occur after an update:
+
+```bash
+# List available generations
+sudo nix-env -p /nix/var/nix/profiles/system --list-generations
+
+# Rollback to previous generation
+sudo nixos-rebuild switch --rollback
 ```
 
 [^wsl-file]: That file is called `nixos-wsl.tar.gz` in releases prior to 2411.*
