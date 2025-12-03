@@ -11,6 +11,7 @@ on:
       - synchronize
       - labeled
       - unlabeled
+      - edited
   workflow_dispatch: {}
 
 permissions:
