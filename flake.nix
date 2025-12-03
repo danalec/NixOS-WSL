@@ -87,6 +87,7 @@
           statix = pkgs.callPackage ./checks/statix.nix args;
           cargo-audit = pkgs.callPackage ./checks/cargo-audit.nix args;
           cargo-deny = pkgs.callPackage ./checks/cargo-deny.nix args;
+          cargo-tree-duplicates = pkgs.callPackage ./checks/cargo-tree-duplicates.nix args;
         }
       );
 
