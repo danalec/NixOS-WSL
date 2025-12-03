@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context};
 use log::{error, info, warn, LevelFilter};
-use nix::libc::{sigaction, PT_NULL, SIGCHLD, SIG_IGN};
+use nix::libc::{sigaction, SIGCHLD, SIG_IGN};
 use nix::sys::inotify::{AddWatchFlags, InitFlags, Inotify};
 use std::mem::MaybeUninit;
 use std::os::unix::process::CommandExt;
@@ -59,18 +59,21 @@ fn real_main() -> anyhow::Result<()> {
 
             unsafe {
                 // WSL starts a single shell under login to make sure that a logind session exists.
-                // That shell is started with SIGCHLD ignored
-                // If it is, we are probably that shell and can just skip setting the environment
-                // sigaction from libc is used here, because the wrapped version from the nix crate does not accept null
+                // That shell is started with SIGCHLD ignored.
+                // If it is, we are probably that shell and can just skip setting the environment.
                 let mut act: sigaction = MaybeUninit::zeroed().assume_init();
-                sigaction(SIGCHLD, PT_NULL as *const sigaction, &mut act);
-                if act.sa_sigaction == SIG_IGN {
+                // Read existing handler without changing it
+                sigaction(SIGCHLD, std::ptr::null(), &mut act);
+                // Prefer checking sa_handler for SIG_IGN
+                if act.sa_handler == SIG_IGN {
                     info!("SIGCHLD is ignored, skipping setting environment");
                     return Ok(());
                 }
             }
 
-            let sh = env::var("NIXOS_WSL_SH").ok().unwrap_or_else(|| shell.to_string_lossy().into_owned());
+            let sh = env::var("NIXOS_WSL_SH")
+                .ok()
+                .unwrap_or_else(|| shell.to_string_lossy().into_owned());
             let env_bin = env::var("NIXOS_WSL_ENV").ok().unwrap_or_else(|| {
                 if Path::new("/run/current-system/sw/bin/env").exists() {
                     "/run/current-system/sw/bin/env".to_string()
@@ -85,7 +88,10 @@ fn real_main() -> anyhow::Result<()> {
             {
                 Ok(o) => o,
                 Err(e) => {
-                    warn!("Failed to read environment from /etc/set-environment: {:?}", e);
+                    warn!(
+                        "Failed to read environment from /etc/set-environment: {:?}",
+                        e
+                    );
                     return Ok(());
                 }
             };
