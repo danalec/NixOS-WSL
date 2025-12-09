@@ -54,35 +54,10 @@ fn real_main() -> anyhow::Result<()> {
     };
 
     log::trace!("Remounting / shared...");
-
-    mount(
-        None::<&str>,
-        "/",
-        None::<&str>,
-        MsFlags::MS_REC | MsFlags::MS_SHARED,
-        None::<&str>,
-    )
-    .context("When remounting /")?;
+    remount_root_shared()?;
 
     log::trace!("Remounting /nix/store read-only...");
-
-    mount(
-        Some("/nix/store"),
-        "/nix/store",
-        None::<&str>,
-        MsFlags::MS_BIND,
-        None::<&str>,
-    )
-    .context("When bind mounting /nix/store")?;
-
-    mount(
-        Some("/nix/store"),
-        "/nix/store",
-        None::<&str>,
-        MsFlags::MS_BIND | MsFlags::MS_REMOUNT | MsFlags::MS_RDONLY,
-        None::<&str>,
-    )
-    .context("When remounting /nix/store read-only")?;
+    remount_nix_store_readonly()?;
 
     log::trace!("Running activation script...");
 
@@ -106,12 +81,15 @@ fn real_main() -> anyhow::Result<()> {
 
     // If the child catches SIGCHLD, `waitid` will wait for it to exit, then return ECHILD.
     // Why? Because POSIX is terrible.
-    let result = waitid(Id::Pid(pid), WaitPidFlag::WEXITED);
-    interpret_waitid_result(result)?;
-
-    // Also check the activation script's exit status explicitly
-    let status = child.wait().context("When waiting for activation status")?;
-    check_activation_exit(status.code())?;
+    match child.wait() {
+        Ok(status) => {
+            check_activation_exit(status.code())?;
+        }
+        Err(_) => {
+            let result = waitid(Id::Pid(pid), WaitPidFlag::WEXITED);
+            interpret_waitid_result(result)?;
+        }
+    }
 
     log::trace!("Spawning real systemd...");
 
@@ -124,6 +102,39 @@ fn real_main() -> anyhow::Result<()> {
             .exec()
             .into(),
     )
+}
+
+fn remount_root_shared() -> anyhow::Result<()> {
+    mount(
+        None::<&str>,
+        "/",
+        None::<&str>,
+        MsFlags::MS_REC | MsFlags::MS_SHARED,
+        None::<&str>,
+    )
+    .context("When remounting /")?;
+    Ok(())
+}
+
+fn remount_nix_store_readonly() -> anyhow::Result<()> {
+    mount(
+        Some("/nix/store"),
+        "/nix/store",
+        None::<&str>,
+        MsFlags::MS_BIND,
+        None::<&str>,
+    )
+    .context("When bind mounting /nix/store")?;
+
+    mount(
+        Some("/nix/store"),
+        "/nix/store",
+        None::<&str>,
+        MsFlags::MS_BIND | MsFlags::MS_REMOUNT | MsFlags::MS_RDONLY,
+        None::<&str>,
+    )
+    .context("When remounting /nix/store read-only")?;
+    Ok(())
 }
 
 fn interpret_waitid_result(result: Result<(), Errno>) -> anyhow::Result<()> {
@@ -174,6 +185,26 @@ mod tests {
     #[test]
     fn activation_exit_none_is_err() {
         assert!(check_activation_exit(None).is_err());
+    }
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod integration {
+    use super::*;
+
+    fn is_root() -> bool { nix::unistd::geteuid().is_root() }
+    fn is_wsl() -> bool {
+        std::env::var("WSL_INTEROP").is_ok() ||
+        std::fs::read_to_string("/proc/sys/kernel/osrelease").map(|s| s.contains("microsoft")).unwrap_or(false)
+    }
+
+    #[test]
+    fn remounts_execute_or_skip() {
+        if !is_root() || !is_wsl() {
+            return;
+        }
+        assert!(remount_root_shared().is_ok());
+        assert!(remount_nix_store_readonly().is_ok());
     }
 }
 
