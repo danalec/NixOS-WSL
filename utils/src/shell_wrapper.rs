@@ -9,6 +9,21 @@ use std::process::Command;
 use std::{env, fs::read_link};
 use systemd_journal_logger::JournalLog;
 
+fn compute_login_arg0(shell_exe: &str, is_login: bool) -> String {
+    if is_login {
+        format!("-{}", shell_exe)
+    } else {
+        shell_exe.to_string()
+    }
+}
+
+fn maybe_set_shell_env(shell: &Path, exe: &Path) {
+    let shell_env = env::var_os("SHELL");
+    if shell_env == Some(exe.into()) {
+        env::set_var("SHELL", shell);
+    }
+}
+
 fn real_main() -> anyhow::Result<()> {
     let exe = read_link("/proc/self/exe").context("when locating the wrapper binary")?;
     let exe_dir = exe.parent().ok_or(anyhow!(
@@ -44,10 +59,7 @@ fn real_main() -> anyhow::Result<()> {
     }
 
     // Set the SHELL environment variable to the wrapped shell instead of the wrapper
-    let shell_env = env::var_os("SHELL");
-    if shell_env == Some(exe.into()) {
-        env::set_var("SHELL", &shell);
-    }
+    maybe_set_shell_env(&shell, &exe);
 
     // Skip if environment was already set
     if env::var_os("__NIXOS_SET_ENVIRONMENT_DONE") != Some("1".into()) {
@@ -111,15 +123,11 @@ fn real_main() -> anyhow::Result<()> {
         ))?
         .to_string();
 
-    let arg0 = if env::args()
+    let is_login = env::args()
         .next()
         .map(|arg| arg.starts_with('-'))
-        .unwrap_or(false)
-    {
-        "-".to_string() + shell_exe.as_str() // prepend "-" to the shell's arg0 to make it a login shell
-    } else {
-        shell_exe.clone()
-    };
+        .unwrap_or(false);
+    let arg0 = compute_login_arg0(shell_exe.as_str(), is_login);
 
     Err(anyhow!(Command::new(&shell)
         .arg0(arg0)
@@ -153,6 +161,40 @@ fn main() {
 
     if let Err(err) = real_main() {
         eprintln!("{:?}", &err);
-        error!("{:?}", &err);
+    error!("{:?}", &err);
     }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn computes_login_arg0_with_dash() {
+        assert_eq!(compute_login_arg0("bash", true), "-bash");
+    }
+
+    #[test]
+    fn computes_login_arg0_without_dash() {
+        assert_eq!(compute_login_arg0("bash", false), "bash");
+    }
+
+    #[test]
+    fn sets_shell_env_when_matches_exe() {
+        let exe = PathBuf::from("/wrapper");
+        let shell = PathBuf::from("/bin/bash");
+        env::set_var("SHELL", &exe);
+        maybe_set_shell_env(&shell, &exe);
+        assert_eq!(env::var("SHELL").unwrap(), shell.display().to_string());
+    }
+
+    #[test]
+    fn does_not_set_shell_env_when_not_matching_exe() {
+        let exe = PathBuf::from("/wrapper");
+        let shell = PathBuf::from("/bin/bash");
+        env::set_var("SHELL", "/other");
+        maybe_set_shell_env(&shell, &exe);
+        assert_eq!(env::var("SHELL").unwrap(), "/other");
+    }
+}
 }

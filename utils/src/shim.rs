@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use nix::errno::Errno;
 use nix::mount::{mount, MsFlags};
 use nix::sys::wait::{waitid, Id, WaitPidFlag};
@@ -107,10 +107,11 @@ fn real_main() -> anyhow::Result<()> {
     // If the child catches SIGCHLD, `waitid` will wait for it to exit, then return ECHILD.
     // Why? Because POSIX is terrible.
     let result = waitid(Id::Pid(pid), WaitPidFlag::WEXITED);
-    match result {
-        Ok(_) | Err(Errno::ECHILD) => {}
-        Err(e) => return Err(e).context("When waiting"),
-    };
+    interpret_waitid_result(result)?;
+
+    // Also check the activation script's exit status explicitly
+    let status = child.wait().context("When waiting for activation status")?;
+    check_activation_exit(status.code())?;
 
     log::trace!("Spawning real systemd...");
 
@@ -123,6 +124,57 @@ fn real_main() -> anyhow::Result<()> {
             .exec()
             .into(),
     )
+}
+
+fn interpret_waitid_result(result: Result<(), Errno>) -> anyhow::Result<()> {
+    match result {
+        Ok(_) | Err(Errno::ECHILD) => Ok(()),
+        Err(e) => Err(e).context("When waiting"),
+    }
+}
+
+fn check_activation_exit(code: Option<i32>) -> anyhow::Result<()> {
+    match code {
+        Some(0) => Ok(()),
+        Some(c) => Err(anyhow!("Activation exited with status {}", c)),
+        None => Err(anyhow!("Activation terminated by signal")),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nix::errno::Errno;
+
+    #[test]
+    fn waitid_ok_is_ok() {
+        assert!(interpret_waitid_result(Ok(())).is_ok());
+    }
+
+    #[test]
+    fn waitid_echild_is_ok() {
+        assert!(interpret_waitid_result(Err(Errno::ECHILD)).is_ok());
+    }
+
+    #[test]
+    fn waitid_other_error_is_err() {
+        assert!(interpret_waitid_result(Err(Errno::EINVAL)).is_err());
+    }
+
+    #[test]
+    fn activation_exit_zero_is_ok() {
+        assert!(check_activation_exit(Some(0)).is_ok());
+    }
+
+    #[test]
+    fn activation_exit_nonzero_is_err() {
+        assert!(check_activation_exit(Some(1)).is_err());
+    }
+
+    #[test]
+    fn activation_exit_none_is_err() {
+        assert!(check_activation_exit(None).is_err());
+    }
 }
 
 fn main() {
