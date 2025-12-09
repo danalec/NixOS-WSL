@@ -32,7 +32,7 @@ with lib; {
               type = types.bool;
               default = false;
               description = ''
-                Wether to modify `/etc/ld.so.conf.d/ld.wsl.conf` to load OpenGL drivers provided by the Windows host in `/usr/lib/wsl/lib` with `/sbin/ldconfig`.
+                Whether to modify `/etc/ld.so.conf.d/ld.wsl.conf` to load OpenGL drivers provided by the Windows host in `/usr/lib/wsl/lib` with `/sbin/ldconfig`.
                 This way of providing OpenGL drivers does not work with NixOS and `wsl.useWindowsDriver` should be used instead.
               '';
             };

@@ -35,7 +35,7 @@ in
 
         Do not populate /bin.
 
-        This is mainfly useful if another module populates /bin like envfs.
+        This is mainly useful if another module populates /bin like envfs.
       '';
     };
     extraBin = mkOption {
@@ -174,7 +174,7 @@ in
 
             if (( ''${#targets[@]} != 0 )); then
               mkdir -p "/usr/share/$x"
-              ${pkgs.rsync}/bin/rsync --archive --copy-dirlinks --delete-after --recursive "''${targets[@]}" "/usr/share/$x"
+              ${pkgs.rsync}/bin/rsync --archive --copy-dirlinks --delete-after --recursive --checksum "''${targets[@]}" "/usr/share/$x"
             else
               rm -rf "/usr/share/$x"
             fi

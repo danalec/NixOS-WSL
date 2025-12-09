@@ -9,6 +9,7 @@ use std::os::unix::io::{FromRawFd, IntoRawFd};
 use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::{Command, Stdio};
+use nix::unistd::dup;
 
 fn unscrew_dev_shm() -> anyhow::Result<()> {
     log::trace!("Unscrewing /dev/shm...");
@@ -90,12 +91,14 @@ fn real_main() -> anyhow::Result<()> {
         .open("/dev/kmsg")
         .context("When opening /dev/kmsg")?
         .into_raw_fd();
+    // Duplicate the fd so stdout and stderr don't share and double-close the same descriptor
+    let kmsg_fd_err = dup(kmsg_fd).context("When duplicating /dev/kmsg fd")?;
 
     let child = Command::new("/nix/var/nix/profiles/system/activate")
         .env("LANG", "C.UTF-8")
         // SAFETY: we just opened this
         .stdout(unsafe { Stdio::from_raw_fd(kmsg_fd) })
-        .stderr(unsafe { Stdio::from_raw_fd(kmsg_fd) })
+        .stderr(unsafe { Stdio::from_raw_fd(kmsg_fd_err) })
         .spawn()
         .context("When activating")?;
 
@@ -125,6 +128,7 @@ fn real_main() -> anyhow::Result<()> {
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
     kernlog::init().expect("Failed to set up logger...");
-    let result = real_main();
-    log::error!("Error: {:?}", result);
+    if let Err(e) = real_main() {
+        log::error!("Error: {:?}", e);
+    }
 }

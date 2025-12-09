@@ -149,12 +149,8 @@ fn main() {
 
     log::set_max_level(LevelFilter::Info);
 
-    let result = real_main();
-
-    let err = result.unwrap_err();
-
-    eprintln!("{:?}", &err);
-
-    // Log the error to the journal
-    error!("{:?}", &err);
+    if let Err(err) = real_main() {
+        eprintln!("{:?}", &err);
+        error!("{:?}", &err);
+    }
 }

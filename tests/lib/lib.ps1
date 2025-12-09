@@ -5,6 +5,10 @@ if ($IsWindows -eq $false) {
   throw "Support for tests in an emulated WSL environment on Linux has been removed"
 }
 
+# Enforce strict, fail-fast behavior in tests
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
 function Remove-Escapes {
   param(
     [parameter(ValueFromPipeline = $true)]
@@ -43,9 +47,19 @@ class Distro {
 
   [Array]Launch([string]$command) {
     Write-Host "> $command"
-    $result = @()
-    Invoke-Expression "wsl.exe -d $($this.id) --% $command" | Tee-Object -Variable result | Write-Host
-    return $result | Remove-Escapes
+    $output = & wsl.exe -d $this.id -- bash -lc $command 2>&1
+    $output | Write-Host
+    return $output | Remove-Escapes
+  }
+
+  [bool]WaitUserSystemdReady([int]$timeoutSeconds = 30) {
+    $deadline = (Get-Date).AddSeconds($timeoutSeconds)
+    do {
+      $this.Launch("systemctl --user is-system-running --quiet")
+      if ($LASTEXITCODE -eq 0) { return $true }
+      Start-Sleep 1
+    } while ((Get-Date) -lt $deadline)
+    return $false
   }
 
   [string]GetPath([string]$path) {
