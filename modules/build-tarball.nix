@@ -60,6 +60,15 @@ in
       default = null;
       description = "Path to system configuration which is copied into the tarball";
     };
+    channelBranch = mkOption {
+      type = types.str;
+      default = nixosWslBranch;
+      description = ''
+        Git branch used for adding the NixOS-WSL channel during image creation.
+        Defaults to a branch computed from the flake's nixpkgs input version.
+        Override to pin a release (e.g. "release-24.11") or test "main" explicitly.
+      '';
+    };
   };
 
   # These options make no sense without the wsl-distro module anyway
@@ -155,8 +164,8 @@ in
           --system ${config.system.build.toplevel} \
           --substituters ""
 
-        echo "[NixOS-WSL] Adding channel..."
-        nixos-enter --root "$root" --command 'HOME=/root nix-channel --add https://github.com/nix-community/NixOS-WSL/archive/refs/heads/${nixosWslBranch}.tar.gz nixos-wsl'
+        echo "[NixOS-WSL] Adding channel (branch: ${cfg.channelBranch})..."
+        nixos-enter --root "$root" --command 'HOME=/root nix-channel --add https://github.com/nix-community/NixOS-WSL/archive/refs/heads/${cfg.channelBranch}.tar.gz nixos-wsl'
 
         echo "[NixOS-WSL] Adding wsl-distribution.conf"
         install -Dm644 ${wsl-distribution-conf} "$root/etc/wsl-distribution.conf"
