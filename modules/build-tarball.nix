@@ -86,6 +86,7 @@ in
       ];
 
       text = ''
+        set -euo pipefail
         usage() {
           echo "Usage: $0 [--extra-files PATH] [--chown PATH UID:GID] [output.tar.gz]"
           exit 1

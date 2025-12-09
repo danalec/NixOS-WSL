@@ -25,7 +25,9 @@ fn real_main() -> anyhow::Result<()> {
         let inotify = Inotify::init(InitFlags::empty()).context("When initializing inotify")?;
 
         // Watch changes in /run to re-check if the activation script has finished
-        let _wd = inotify.add_watch("/run", AddWatchFlags::IN_CREATE).unwrap();
+        let _wd = inotify
+            .add_watch("/run", AddWatchFlags::IN_CREATE)
+            .context("When adding inotify watch")?;
 
         let mut warning = false;
 

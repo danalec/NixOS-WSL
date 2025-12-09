@@ -157,7 +157,7 @@ in
 
     powerManagement.enable = false;
 
-    security.sudo.wheelNeedsPassword = mkDefault false; # The default user will not have a password by default
+    security.sudo.wheelNeedsPassword = mkDefault (!cfg.passwordlessSudoForWheel);
 
     system.activationScripts = {
       copy-launchers = mkIf cfg.startMenuLaunchers (
@@ -243,3 +243,8 @@ in
     ];
   };
 }
+    passwordlessSudoForWheel = mkOption {
+      type = bool;
+      default = true;
+      description = "Whether members of the wheel group can sudo without a password";
+    };
